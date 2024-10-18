@@ -1,20 +1,22 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 
-public class RedDot
+namespace RedDotSystem
 {
-    RedDotTag _redDotTag;
-    public RedDotTag RedDotTag => _redDotTag;
-    public bool On { get; set; }
-
-    // method that validates its on/off
-    private Func<bool> _validationMethod;
-    public RedDot(RedDotTag redDotTag)
+    public enum ERedDot
     {
-        _redDotTag = redDotTag;
-        _validationMethod = RedDotManager.Instance.GetValidationMethod(_redDotTag);
+        None,
+        // Just for root node which is not visible
+        Root,
+
+        A,
+        A_B,
+        A_B_C,
+        A_B_D,
+        E,
+        E_F,
+        G,
+
+        End,
     }
 }
-

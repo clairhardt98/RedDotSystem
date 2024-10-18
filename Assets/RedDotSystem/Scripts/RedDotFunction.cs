@@ -1,28 +1,26 @@
-public static class RedDotFunction 
+using System;
+
+public static class RedDotFunction
 {
+    private static Random random = new Random();
 
-
-    public static bool Test1()
+    public static bool C()
     {
-        // first
-        throw new System.NotImplementedException();
+        return random.Next(2) == 1; // 0 또는 1을 생성하여 1일 경우 true, 0일 경우 false를 반환
     }
 
-    public static bool Test2()
+    public static bool D()
     {
-        // second
-        throw new System.NotImplementedException();
+        return random.Next(2) == 1; // 0 또는 1을 생성하여 1일 경우 true, 0일 경우 false를 반환
     }
 
-    public static bool Test3()
+    public static bool F()
     {
-        // second
-        throw new System.NotImplementedException();
+        return random.Next(2) == 1; // 0 또는 1을 생성하여 1일 경우 true, 0일 경우 false를 반환
     }
 
-    public static bool Test4()
+    public static bool G()
     {
-        // fourth
-        throw new System.NotImplementedException();
+        return random.Next(2) == 1; // 0 또는 1을 생성하여 1일 경우 true, 0일 경우 false를 반환
     }
 }
