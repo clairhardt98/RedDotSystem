@@ -20,8 +20,7 @@ public class UI_TestRedDot : MonoBehaviour
         _redDotNode = RedDotManager.Instance.GetRedDotNode(_reddotType);
         _titleTmp.text = _reddotType.ToString();
 
-        Refresh();
-        _redDotNode.BindValueChangedEvent(Refresh);
+        _redDotNode.BindValueChangedEvent(Refresh, true);
     }
 
     public void OnClick()

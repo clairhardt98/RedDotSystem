@@ -15,7 +15,7 @@ namespace RedDotSystem
         private int _childStateBitFlags;
         private List<RedDotNode> _children = new List<RedDotNode>();
 
-        public bool IsLeaf
+        private bool IsLeaf
         {
             get
             {
@@ -99,10 +99,15 @@ namespace RedDotSystem
                 }
             }
         }
-
-        // If child RedDot state changed, this method is called and check bitflags
+        /// <summary>
+        /// If child RedDot state changed, this method is called and check bitflags.
+        /// This is called only when RedDot is not a leaf node.
+        /// </summary>
+        /// <param name="child"></param>
         public void OnChildChanged(RedDotNode child)
         {
+            Assert.IsTrue(!IsLeaf);
+
             int childIdx = _children.IndexOf(child);
             if (childIdx < 0) return;
 

@@ -1,12 +1,14 @@
 using RedDotSystem;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
 
-public class RedDotManager
+public class RedDotManager : MonoBehaviour
 {
     Dictionary<ERedDot, RedDotNode> _nodeMap;
+    Dictionary<ERedDot, Coroutine> _timerCoroutineMap;
     RedDotNode _root;
     #region Singleton
     private static RedDotManager _instance;
@@ -16,19 +18,22 @@ public class RedDotManager
         {
             if (_instance == null)
             {
-                _instance = new RedDotManager();
+                GameObject obj = new GameObject("RedDotManager");
+                _instance = obj.AddComponent<RedDotManager>();
+
+                _instance.Init();
+                DontDestroyOnLoad(obj);
             }
             return _instance;
         }
     }
     #endregion
 
-    private RedDotManager()
+    private void Init()
     {
         _root = BuildRedDotTree();
         InitTree();
     }
-
 
     private RedDotNode BuildRedDotTree()
     {
@@ -97,8 +102,8 @@ public class RedDotManager
             node.BindEvaluateFunc(evaluateFunc);
             Debug.LogWarning($"Method {methodName} Bound Success.");
         }
-        
     }
+
     private void InitTree()
     {
         Assert.IsNotNull(_root);
@@ -115,5 +120,40 @@ public class RedDotManager
         }
 
         return null;
+    }
+
+    public void RegisterTimer(ERedDot redDot, float duration)
+    {
+        if (_timerCoroutineMap == null)
+            _timerCoroutineMap = new();
+
+        // if an RedDot already has a timer, stop it
+        if (_timerCoroutineMap.ContainsKey(redDot))
+        {
+            StopCoroutine(_timerCoroutineMap[redDot]);
+            _timerCoroutineMap.Remove(redDot);
+
+            Debug.LogWarning($"{redDot} timer coroutine already exists. Stopped.");
+        }
+
+        _timerCoroutineMap[redDot] = StartCoroutine(TimerCoroutine(redDot, duration)); 
+    }
+
+    private IEnumerator TimerCoroutine(ERedDot redDot, float duration)
+    {
+        float startTime = Time.time;
+
+        while(Time.time - startTime < duration)
+        {
+            yield return null;
+        }
+        
+        if(_nodeMap.TryGetValue(redDot, out RedDotNode redDotNode))
+        {
+            Debug.Log($"{redDot} timer coroutine ends. Evaluating {redDot}");
+            redDotNode.Evaluate();
+        }
+
+        _timerCoroutineMap.Remove(redDot);
     }
 }

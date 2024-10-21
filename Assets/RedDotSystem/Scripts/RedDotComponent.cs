@@ -1,5 +1,6 @@
 using UnityEngine;
 using RedDotSystem;
+using UnityEngine.Assertions;
 
 
 /// <summary>
@@ -17,11 +18,26 @@ public class RedDotComponent : MonoBehaviour
     public void Init()
     {
         _redDotNode = RedDotManager.Instance.GetRedDotNode(_redDotType);
-        _redDotNode.BindValueChangedEvent(OnRedDotValueChanged);
+        _redDotNode?.BindValueChangedEvent(OnRedDotValueChanged);
     }
 
     private void OnRedDotValueChanged(bool isOn)
     {
-        _redDotImageObj.SetActive(isOn);
+        if(_redDotImageObj != null)
+            _redDotImageObj.SetActive(isOn);
+    }
+
+    // Only used for None RedDotType.
+    public void Toggle(bool on)
+    {
+        Assert.IsTrue(_redDotType == ERedDot.None, "Only None RedDotType can use Toggle");
+        if(_redDotImageObj != null)
+            _redDotImageObj.SetActive(on);
+    }
+
+    // Register RedDot to Timer that will be call Evaluate after time
+    public void RegisterTimer(float time)
+    {
+        RedDotManager.Instance.RegisterTimer(_redDotType, time);
     }
 }
