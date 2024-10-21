@@ -6,7 +6,6 @@ using UnityEngine.UI;
 public class UI_TestRedDot : MonoBehaviour
 {
     [SerializeField] Image _reddotImage;
-    
 
     [SerializeField] ERedDot _reddotType;
     [SerializeField] TextMeshProUGUI _titleTmp;
@@ -22,9 +21,7 @@ public class UI_TestRedDot : MonoBehaviour
         _titleTmp.text = _reddotType.ToString();
 
         Refresh();
-        _redDotNode.OnValueChanged -= Refresh;
-
-        _redDotNode.OnValueChanged += Refresh;
+        _redDotNode.BindValueChangedEvent(Refresh);
     }
 
     public void OnClick()
@@ -32,10 +29,8 @@ public class UI_TestRedDot : MonoBehaviour
         _redDotNode.Evaluate();
     }
 
-    void Refresh()
+    void Refresh(bool isOn)
     {
-        _reddotImage.color = _redDotNode.IsOn? _onColor : _offColor;
+        _reddotImage.color = isOn ? _onColor : _offColor;
     }
-
-
 }

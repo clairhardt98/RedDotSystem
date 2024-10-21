@@ -6,42 +6,51 @@ namespace RedDotSystem
 {
     public class RedDotNode
     {
-        public ERedDot Type { get; }
-        public bool IsOn { get; set; }
-        public Func<bool> EvaluateFunc { get; set; }
+        public ERedDot RedDotType { get; }
         public RedDotNode Parent { get; set; }
 
-        public Action OnValueChanged;
-        private List<RedDotNode> children = new List<RedDotNode>();
-        private int childStateBitFlags;
+        private bool _isOn;
+        private Func<bool> _evaluateFunc;
+        private Action<bool> _onValueChanged;
+        private int _childStateBitFlags;
+        private List<RedDotNode> _children = new List<RedDotNode>();
 
         public bool IsLeaf
         {
             get
             {
-                return children == null || children.Count == 0;
+                return _children == null || _children.Count == 0;
             }
         }
 
-        public RedDotNode(ERedDot Type)
+        public RedDotNode(ERedDot type)
         {
-            this.Type = Type;
+            this.RedDotType = type;
         }
 
         public void AddChild(RedDotNode child)
         {
             child.Parent = this;
-            children.Add(child);
+            _children.Add(child);
         }
 
         public void RemoveChild(RedDotNode child)
         {
-            children.Remove(child);
+            _children.Remove(child);
         }
 
         public void BindEvaluateFunc(Func<bool> func)
         {
-            EvaluateFunc = func;
+            _evaluateFunc = func;
+        }
+
+        public void BindValueChangedEvent(Action<bool> action, bool fireOnBind = false)
+        {
+            _onValueChanged -= action;
+            _onValueChanged += action;
+
+            if (fireOnBind)
+                _onValueChanged.Invoke(_isOn);
         }
 
         /// <summary>
@@ -51,42 +60,42 @@ namespace RedDotSystem
         /// <returns></returns>
         public bool Evaluate(bool topDown = false)
         {
-            bool previousState = IsOn;
+            bool previousState = _isOn;
 
             if (IsLeaf)
             {
-                IsOn = EvaluateFunc != null && EvaluateFunc.Invoke();
+                _isOn = _evaluateFunc != null && _evaluateFunc.Invoke();
             }
             else
             {
                 // 리프노드가 아닌 노드에 대해 호출되면, 자식 노드들을 모두 평가하고 자신의 상태를 업데이트
 
                 UpdateChildStateBitFlags();
-                IsOn = childStateBitFlags != 0;
+                _isOn = _childStateBitFlags != 0;
             }
 
-            if (previousState != IsOn)
+            if (previousState != _isOn)
             {
-                OnValueChanged?.Invoke();
+                _onValueChanged?.Invoke(_isOn);
                 if(!topDown)
                     Parent?.OnChildChanged(this);
             }
 
-            UnityEngine.Debug.Log("Evaluate " + Type.ToString() + $"{IsOn}");
+            UnityEngine.Debug.Log("Evaluate " + RedDotType.ToString() + $"{_isOn}");
 
-            return IsOn;
+            return _isOn;
         }
 
         // Update child state bitflags
         private void UpdateChildStateBitFlags()
         {
-            childStateBitFlags = 0;
+            _childStateBitFlags = 0;
 
-            for (int i = 0; i < children.Count; i++)
+            for (int i = 0; i < _children.Count; i++)
             {
-                if (children[i].Evaluate(true) == true)
+                if (_children[i].Evaluate(true) == true)
                 {
-                    childStateBitFlags |= 1 << i;
+                    _childStateBitFlags |= 1 << i;
                 }
             }
         }
@@ -94,24 +103,24 @@ namespace RedDotSystem
         // If child RedDot state changed, this method is called and check bitflags
         public void OnChildChanged(RedDotNode child)
         {
-            int childIdx = children.IndexOf(child);
+            int childIdx = _children.IndexOf(child);
             if (childIdx < 0) return;
 
-            if (child.IsOn)
+            if (child._isOn)
             {
-                childStateBitFlags |= 1 << childIdx;
+                _childStateBitFlags |= 1 << childIdx;
             }
             else
             {
-                childStateBitFlags &= ~(1 << childIdx);
+                _childStateBitFlags &= ~(1 << childIdx);
             }
 
-            bool previousState = IsOn;
-            IsOn = childStateBitFlags != 0;
+            bool previousState = _isOn;
+            _isOn = _childStateBitFlags != 0;
 
-            if (IsOn != previousState)
+            if (_isOn != previousState)
             {
-                OnValueChanged?.Invoke();
+                _onValueChanged?.Invoke(_isOn);
                 Parent?.OnChildChanged(this);
             }
         }
