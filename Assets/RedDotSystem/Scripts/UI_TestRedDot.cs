@@ -1,35 +1,58 @@
 using RedDotSystem;
+using System.Collections;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
+
+// UI 테스트용 스크립트
 public class UI_TestRedDot : MonoBehaviour
 {
-    [SerializeField] Image _reddotImage;
+    [SerializeField] private RedDotComponent _redDotComp;
+    [SerializeField] private TextMeshProUGUI _timerTxt;
+    [SerializeField] private TextMeshProUGUI _nameTxt;
 
-    [SerializeField] ERedDot _reddotType;
-    [SerializeField] TextMeshProUGUI _titleTmp;
+    Coroutine _drawTimeCoroutine;
+    private bool _isOn = false;
 
-    Color _onColor = new Color(0, 255, 0, 255);
-    Color _offColor = new Color(255, 0, 0, 255);
-
-    RedDotNode _redDotNode;
-    
-    private void OnEnable()
+    private void Awake()
     {
-        _redDotNode = RedDotManager.Instance.GetRedDotNode(_reddotType);
-        _titleTmp.text = _reddotType.ToString();
+        if(_redDotComp == null)
+            _redDotComp = GetComponent<RedDotComponent>();
 
-        _redDotNode.BindValueChangedEvent(Refresh, true);
+        _nameTxt.text = _redDotComp.RedDotType.ToString();
     }
 
-    public void OnClick()
+    public void OnToggleClick()
     {
-        _redDotNode.Evaluate();
+        _redDotComp.Toggle(_isOn);
+        _isOn = !_isOn;
     }
 
-    void Refresh(bool isOn)
+    public void RegisterTimer(float value)
     {
-        _reddotImage.color = isOn ? _onColor : _offColor;
+        _redDotComp.RegisterTimer(value, () =>
+        {
+            if(gameObject.activeSelf)
+            {
+                _timerTxt.text = "Timer End";
+            }
+        });
+
+        if (_drawTimeCoroutine != null)
+            StopCoroutine(_drawTimeCoroutine);
+
+        _drawTimeCoroutine = StartCoroutine(DrawRemainTimeTxt(value));
     }
+
+    IEnumerator DrawRemainTimeTxt(float startTime)
+    {
+        float endTime = Time.time + startTime;
+        while(Time.time < endTime)
+        {
+            float remainingTime = endTime - Time.time;
+            _timerTxt.text = remainingTime.ToString("F2");
+            yield return null;
+        }
+    }
+
 }
