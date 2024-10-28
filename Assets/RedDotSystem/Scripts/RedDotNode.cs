@@ -7,11 +7,11 @@ namespace RedDotSystem
     public class RedDotNode
     {
         public ERedDot RedDotType { get; }
-        public RedDotNode Parent { get; set; }
 
         private bool _isOn;
         private Func<bool> _evaluateFunc;
         private Action<bool> _onValueChanged;
+        private Action<RedDotNode> _onChildChanged;
         private int _childStateBitFlags;
         private List<RedDotNode> _children = new List<RedDotNode>();
 
@@ -31,13 +31,24 @@ namespace RedDotSystem
 
         public void AddChild(RedDotNode child)
         {
-            child.Parent = this;
+            child.SubscribeChildChangedEvent(OnChildChanged);
             _children.Add(child);
         }
-
         public void RemoveChild(RedDotNode child)
         {
+            child.UnsubscribeChildChangedEvent(OnChildChanged);
             _children.Remove(child);
+        }
+
+        public void SubscribeChildChangedEvent(Action<RedDotNode> childChangedEvent)
+        {
+            _onChildChanged -= childChangedEvent;
+            _onChildChanged += childChangedEvent;
+        }
+
+        public void UnsubscribeChildChangedEvent(Action<RedDotNode> childChangedEvent)
+        {
+            _onChildChanged -= childChangedEvent;
         }
 
         public void BindEvaluateFunc(Func<bool> func)
@@ -78,8 +89,8 @@ namespace RedDotSystem
             if (previousState != _isOn)
             {
                 _onValueChanged?.Invoke(_isOn);
-                if(!topDown)
-                    Parent?.OnChildChanged(this);
+                if (!topDown)
+                    _onChildChanged?.Invoke(this);
             }
 
             UnityEngine.Debug.Log("Evaluate " + RedDotType.ToString() + $"{_isOn}");
@@ -105,7 +116,7 @@ namespace RedDotSystem
         /// This is called only when RedDot is not a leaf node.
         /// </summary>
         /// <param name="child"></param>
-        public void OnChildChanged(RedDotNode child)
+        private void OnChildChanged(RedDotNode child)
         {
             Assert.IsTrue(!_isLeaf);
 
@@ -127,7 +138,7 @@ namespace RedDotSystem
             if (_isOn != previousState)
             {
                 _onValueChanged?.Invoke(_isOn);
-                Parent?.OnChildChanged(this);
+                _onChildChanged?.Invoke(this);
             }
         }
 
@@ -142,7 +153,7 @@ namespace RedDotSystem
             _isOn = on;
 
             _onValueChanged?.Invoke(_isOn);
-            Parent?.OnChildChanged(this);
+            _onChildChanged?.Invoke(this);
         }
     }
 
